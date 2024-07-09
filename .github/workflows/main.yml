@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'" 
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm install
+
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test
+
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm install
+
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+
+    - name: Build and push Docker images
+      env:
+        DOCKER_BUILDKIT: 1
+        IMAGE_BACKEND: kdcl3110/todolist-backend:latest
+        IMAGE_FRONTEND: kdcl3110/todolist-frontend:latest
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker build -t $IMAGE_BACKEND ./backend
+        docker build -t $IMAGE_FRONTEND ./frontend
+        docker push $IMAGE_BACKEND
+        docker push $IMAGE_FRONTEND
+
+    # - name: Deploy to server
+    #   env:
+    #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     SSH_HOST: ${{ secrets.SSH_HOST }}
+    #     SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+    #   run: |
+    #     mkdir -p ~/.ssh
+    #     echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    #     chmod 600 ~/.ssh/id_rsa
+    #     ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+    #     ssh $SSH_USERNAME@$SSH_HOST << 'EOF'
+    #       docker pull kdcl3110/todolist-backend:latest
+    #       docker pull kdcl3110/todolist-frontend:latest
+    #       docker-compose -f /path/to/your/docker-compose.yml up -d
+    #     EOF

@@ -8,6 +8,7 @@ services:
       - "5000:5000"
     environment:
       - MONGO_URL=mongodb://mongo:27017/todolist
+      - MONGO_TEST_URL=mongodb://mongo:27017/todolist_test
     depends_on:
       - mongo
 

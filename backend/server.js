@@ -1,31 +1,20 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+require('dotenv').config();
+const mongoose = require('mongoose');
+const app = require('./app');
 
-const todoRoute = require("./routes/todo.route");
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-
+// Connect to MongoDB
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost:27017/todolist";
-// MongoDB connection
 mongoose.connect(mongoUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
-db.once("open", () => {
-  console.log("Connected to MongoDB");
+db.once('open', () => {
+  console.log('Connected to MongoDB');
 });
 
-app.use("/todos/", todoRoute);
-
-app.listen(5000, () => {
-  console.log("Server is running on port 5000");
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
