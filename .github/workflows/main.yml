@@ -54,7 +54,7 @@ jobs:
         IMAGE_BACKEND: kdcl3110/todolist-backend:latest
         IMAGE_FRONTEND: kdcl3110/todolist-frontend:latest
       run: |
-        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
         docker build -t $IMAGE_BACKEND ./backend
         docker build -t $IMAGE_FRONTEND ./frontend
         docker push $IMAGE_BACKEND
